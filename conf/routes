@@ -1,0 +1,25 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET         /                    controllers.Application.index()
+GET         /db                  controllers.Application.db()
+
+# Terms
+GET         /terms               controllers.Application.list(offset: Integer ?= 0)
+GET         /terms/:hid          controllers.Application.show(hid: String)
+POST        /terms/:hid          controllers.Application.save(hid: String)
+
+# MetaMap
+POST        /metamap             controllers.MetaMap.search()
+GET         /metamap             controllers.MetaMap.searchWithKeyword(keyword: String)
+
+# Admin
+GET         /admin               controllers.Application.admin()
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /assets/*file        controllers.Assets.at(path="/public", file)
+
+#RT
+POST        /rt                  controllers.Application.searchFromRT()

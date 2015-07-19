@@ -1,0 +1,64 @@
+html {
+  /*overflow-y: scroll;*/
+}
+
+body {
+  background-color: #fcfcfc;
+}
+
+/* Index page */
+.jumbotron {
+  text-align: center;
+  background-color: transparent;
+}
+.jumbotron .btn {
+  padding: 14px 24px;
+  font-size: 21px;
+  width: 150px;
+}
+
+/* DB select */
+.db-select {
+  margin-bottom: 5px;
+}
+
+.term-head {
+  width: 200px;
+}
+
+.term-score {
+  border-left: 1px solid #ddd;
+  padding-left: 20px;
+  width: 130px;
+}
+
+.term-action {
+  border-left: 1px solid #ddd;
+  padding-left: 20px;
+}
+
+.expert .checkbox {
+  margin-left: 20px;
+}
+
+.vcenter {
+  display: inline-block;
+  vertical-align: middle;
+  float: none;
+}
+
+.trim {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*.tooltip-arrow,*/
+/*.tag-tooltip + .tooltip > .tooltip-inner {*/
+  /*background-color: rgba(177, 167, 173, 1.0);*/
+  /*color: #000;*/
+/*}*/
+
+.tag-tooltip {
+  margin: 0;
+}

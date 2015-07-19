@@ -1,0 +1,12 @@
+OK - 허브이름에 링크
+OK - source 표시 수정
+* source
+  - database:
+  - table: p_herb_1
+  - attribute:
+* Herb name ->
+* additional sematic
+OK - 시맨틱 타입도 그 dysn인가 이런 거 제대로 보이게 하고
+
+디비 스키마 출력
+TESS 관리자 페이지

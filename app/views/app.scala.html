@@ -1,0 +1,401 @@
+@(hid: String, tuple: Tuple)
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TESS</title>
+
+    <!-- Bootstrap -->
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/app.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+    <div class="container">
+      <h1 class="page-header">Decide Standard Terms</h1>
+      <!--<h3>Context</h3>-->
+      <div class="well">
+        <ul style="margin: 0px; padding-left: 20px">
+          <li>Source</li>
+            <ul>
+              <li>Database: KoTMID</li>
+              <li>Table: p_herb_1</li>
+              <li>Attribute: precaution, preparation</li>
+            </ul>
+          <li>Herb name: @tuple.hname</li>
+          <li>Additional semantic: @tuple.context</li>
+          <!--<li>Effect sentence having terminology to be resolve: @tuple.context</li>-->
+          <!--<li>Source database: @tuple.originDB</li>-->
+        </ul>
+      </div>
+      <input type="hidden" name="hid" id="hid" value="@hid">
+
+      <!--<h3>Terms</h3>-->
+      <div class="clearfix" style="margin-top: 10px; padding-bottom: 5px">
+        <div class="pull-left" style="width: 220px; margin-left: 5px"><b>terms</b></div>
+        <div class="pull-left" style="margin-right: 15px"><b>accuracy (0~1000)</b></div>
+        <div class="pull-left"><b>candidate of standard term</b></div>
+      </div>
+      @import java.math.BigInteger; var i=1
+      @for((key: String, t: Term) <- tuple.terms) {
+      <div class="panel panel-default">
+        <div class="panel-body">
+
+          <div class="term-head pull-left">
+            <p id="originPhrase@i"><b>@t.originPhrase</b></p>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" name="originRT" id="originRT@i" value="@t.originPhrase" onclick="openRT(this, @i)">
+                Register to dictionary
+              </label>
+            </div>
+          </div>
+
+          <input type="hidden" id="rt_originRT@i" value="">
+          <input type="hidden" id="rt_searchRT@i" value="">
+          <input type="hidden" id="rt_optExpert@i" value="">
+          <input type="hidden" id="expert@i" value="">
+
+          <div class="term-action pull-left">
+            @for((key: String, value: List[Concept]) <- t.conceptGroups) {
+            <div class="radio">
+              <label>
+                <input type="radio" name="radio@i" value="@t.getMergedConceptId(value)" onclick="selectTerm(@i)"/>
+                <div>@t.getMergedScore(value)&nbsp;&nbsp;&nbsp;&nbsp;<!--@t.getMergedText(value)-->
+                  @for(c: Concept <- value) {
+                    <span>@c.conceptName</span><span>(@c.preferredName)</span>
+                    @for(types: String <- c.getSemanticTypeList()) {
+                      <button type="button" class="btn btn-default btn-xs tag-tooltip" data-toggle="tooltip" data-placement="top" title="@Semantic.getSemantic(types)">@types</button>
+                    }
+                  }
+                </div>
+              </label>
+            </div>
+            }
+
+            <div class="radio">
+              <label>
+                <input type="radio" name="radio@i" value="expert" data-toggle="modal" data-target="#myModal" style="outline: none" onclick="selectTerm(@i);openExpert(this, @i)">
+                <span>Expert defined</span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      @(i+=1)
+      }
+
+      <!-- footer -->
+      <div style="text-align: center; margin-bottom: 20px">
+        <!--<button type="button" class="btn btn-default" data-toggle="modal" data-target="#modalRT">Submit</button>-->
+        <button type="button" class="btn btn-default" onclick="window.location='/terms'">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-submit">Submit</button>
+      </div>
+    </div>
+
+    <!-- Modal for expert -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="myModalLabel">New terminology search from ULMS</h4>
+          </div>
+          <div class="modal-body">
+            <!-- modified by tykim -->
+            <div class = "modal-choice">
+              <form>
+                <input type="radio" id = "choice1" name = "choice" value "ULMS" checked> ULMS
+                <input type="radio" id = "choice2" name = "choice" value "RT" > RT
+              </form>
+            </div>
+
+            <div class="input-group">
+              <input id="search-term" type="text" class="form-control">
+              <span class="input-group-btn">
+                <button id="search-btn" class="btn btn-default" type="button">Search</button>
+              </span>
+            </div>
+
+            <div style="margin-top:15px; margin-bottom: 15px; border-top: 0px solid #e5e5e5"></div>
+            <div id="search-result"></div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" id="search-confirm" style="margin-left: 0px">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for rt -->
+    <div class="modal fade" id="modalRT" tabindex="-1" role="dialog" aria-labelledby="modalRTLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="modalRTLabel">Register to RT</h4>
+          </div>
+          <div class="modal-body">
+
+            <form class="form-horizontal" role="form" style="padding-right: 10px">
+              <div class="form-group">
+                <label class="col-xs-3 control-label">Target Term</label>
+                <div class="col-xs-9">
+                  <p class="form-control-static" id="rt-target-term">target</p>
+                </div>
+              </div>
+
+              <!-- temporarily use hidden input -->
+              <input type="hidden" id="rt-target-cid" value="">
+              <input type="hidden" id="rt-term" value="">
+
+              <div class="form-group">
+                <label for="inputPreferred" class="col-xs-3 control-label">Preferred</label>
+                <div class="col-xs-9">
+                  <select class="form-control" id="inputPreferred">
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputExpertName" class="col-xs-3 control-label">Expert Name</label>
+                <div class="col-xs-9">
+                  <input type="text" class="form-control" id="inputExpertName">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputSemantic" class="col-xs-3 control-label">Semantic</label>
+                <div class="col-xs-9">
+                  <select class="form-control" id="inputSemantic">
+                    <option>Organism</option>
+                    <option>Plant</option>
+                    <option>Fungus</option
+                    <option>Virus</option>
+                    <option>Bacterium</option>
+                    <option>Animal</option>
+                    <option>Vertebrate</option>
+                    <option>Amphibian</option>
+                    <option>Bird</option>
+                    <option>Fish</option>
+                    <option>Reptile</option>
+                    <option>Mammal</option>
+                    <option>Human</option>
+                    <option>Anatomical Structure</option>
+                    <option>Embryonic Structure</option>
+                    <option>Congenital Abnormality</option>
+                    <option>Acquired Abnormality</option>
+                    <option>Fully Formed Anatomical Structure</option>
+                    <option>Body System</option>
+                    <option>Body Part, Organ, or Organ Component</option>
+                    <option>Tissue</option>
+                    <option>Cell</option>
+                    <option>Cell Component</option>
+                    <option>Gene or Genome</option>
+                    <option>Body Location or Region</option>
+                    <option>Body Space or Junction</option>
+                    <option>Body Substance</option>
+                    <option>Organism Attribute</option>
+                    <option>Finding</option>
+                    <option>Laboratory or Test Result</option>
+                    <option>Injury or Poisoning</option>
+                    <option>Biologic Function</option>
+                    <option>Physiologic Function</option>
+                    <option>Organism Function</option>
+                    <option>Mental Process</option>
+                    <option>Organ or Tissue Function</option>
+                    <option>Cell Function</option>
+                    <option>Molecular Function</option>
+                    <option>Genetic Function</option>
+                    <option>Pathologic Function</option>
+                    <option>Immunologic Factor</option>
+                    <option>Disease or Syndrome</option>
+                    <option>Mental or Behavioral Dysfunction</option>
+                    <option>Cell or Molecular Dysfunction</option>
+                    <option>Experimental Model of Disease</option>
+                    <option>Event</option>
+                    <option>Activity</option>
+                    <option>Behavior</option>
+                    <option>Social Behavior</option>
+                    <option>Individual Behavior</option>
+                    <option>Daily or Recreational Activity</option>
+                    <option>Occupational Activity</option>
+                    <option>Health Care Activity</option>
+                    <option>Laboratory Procedure</option>
+                    <option>Diagnostic Procedure</option>
+                    <option>Therapeutic or Preventive Procedure</option>
+                    <option>Research Activity</option>
+                    <option>Molecular Biology Research Technique</option>
+                    <option>Governmental or Regulatory Activity</option>
+                    <option>Educational Activity</option>
+                    <option>Machine Activity</option>
+                    <option>Phenomenon or Process</option>
+                    <option>Human-caused Phenomenon or Process</option>
+                    <option>Environmental Effect of Humans</option>
+                    <option>Natural Phenomenon or Process</option>
+                    <option>Entity</option>
+                    <option>Physical Object</option>
+                    <option>Manufactured Object</option>
+                    <option>Medical Device</option>
+                    <option>Research Device</option>
+                    <option>Conceptual Entity</option>
+                    <option>Idea or Concept</option>
+                    <option>Temporal Concept</option>
+                    <option>Qualitative Concept</option>
+                    <option>Quantitative Concept</option>
+                    <option>Spatial Concept</option>
+                    <option>Geographic Area</option>
+                    <option>Molecular Sequence</option>
+                    <option>Nucleotide Sequence</option>
+                    <option>Amino Acid Sequence</option>
+                    <option>Carbohydrate Sequence</option>
+                    <option>Regulation or Law</option>
+                    <option>Occupation or Discipline</option>
+                    <option>Biomedical Occupation or Discipline</option>
+                    <option>Indicator, Reagent, or Diagnostic Aid</option>
+                    <option>Organization</option>
+                    <option>Health Care Related Organization</option>
+                    <option>Professional Society</option>
+                    <option>Self-help or Relief Organization</option>
+                    <option>Group</option>
+                    <option>Professional or Occupational Group</option>
+                    <option>Population Group</option>
+                    <option>Family Group</option>
+                    <option>Age Group</option>
+                    <option>Patient or Disabled Group</option>
+                    <option>Group Attribute</option>
+                    <option>Chemical</option>
+                    <option>Chemical Viewed Structurally</option>
+                    <option>Organic Chemical</option>
+                    <option>Steroid</option>
+                    <option>Eicosanoid</option>
+                    <option>Nucleic Acid, Nucleoside, or Nucleotide</option>
+                    <option>Organophosphorus Compound</option>
+                    <option>Amino Acid, Peptide, or Protein</option>
+                    <option>Carbohydrate</option>
+                    <option>Lipid</option>
+                    <option>Chemical Viewed Functionally</option>
+                    <option>Pharmacologic Substance</option>
+                    <option>Biomedical or Dental Material</option>
+                    <option>Biologically Active Substance</option>
+                    <option>Neuroreactive Substance or Biogenic Amine</option>
+                    <option>Hormone</option>
+                    <option>Enzyme</option>
+                    <option>Vitamin</option>
+                    <option>Hazardous or Poisonous Substance</option>
+                    <option>Substance</option>
+                    <option>Food</option>
+                    <option>Functional Concept</option>
+                    <option>Intellectual Product</option>
+                    <option>Language</option>
+                    <option>Sign or Symptom</option>
+                    <option>Classification</option>
+                    <option>Anatomical Abnormality</option>
+                    <option>Neoplastic Process</option>
+                    <option>Receptor</option>
+                    <option>Archaeon</option>
+                    <option>Antibiotic</option>
+                    <option>Element, Ion, or Isotope</option>
+                    <option>Inorganic Chemical</option>
+                    <option>Clinical Drug</option>
+                    <option>Clinical Attribute</option>
+                    <option>Drug Delivery Device</option>
+                    <option>Eukaryote</option>
+                    <option>physically_related_to</option>
+                    <option>part_of</option>
+                    <option>contains</option>
+                    <option>location_of</option>
+                    <option>temporally_related_to</option>
+                    <option>co-occurs_with</option>
+                    <option>precedes</option>
+                    <option>functionally_related_to</option>
+                    <option>process_of</option>
+                    <option>carries_out</option>
+                    <option>interacts_with</option>
+                    <option>practices</option>
+                    <option>produces</option>
+                    <option>exhibits</option>
+                    <option>disrupts</option>
+                    <option>causes</option>
+                    <option>prevents</option>
+                    <option>complicates</option>
+                    <option>manifestation_of</option>
+                    <option>affects</option>
+                    <option>occurs_in</option>
+                    <option>manages</option>
+                    <option>treats</option>
+                    <option>uses</option>
+                    <option>indicates</option>
+                    <option>result_of</option>
+                    <option>conceptually_related_to</option>
+                    <option>property_of</option>
+                    <option>conceptual_part_of</option>
+                    <option>evaluation_of</option>
+                    <option>measures</option>
+                    <option>diagnoses</option>
+                    <option>assesses_effect_of</option>
+                    <option>issue_in</option>
+                    <option>associated_with</option>
+                    <option>consists_of</option>
+                    <option>adjacent_to</option>
+                    <option>connected_to</option>
+                    <option>interconnects</option>
+                    <option>surrounds</option>
+                    <option>traverses</option>
+                    <option>derivative_of</option>
+                    <option>developmental_form_of</option>
+                    <option>degree_of</option>
+                    <option>measurement_of</option>
+                    <option>method_of</option>
+                    <option>isa</option>
+                    <option>brings_about</option>
+                    <option>performs</option>
+                    <option>spatially_related_to</option>
+                    <option>analyzes</option>
+                    <option>branch_of</option>
+                    <option>tributary_of</option>
+                    <option>ingredient_of</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="inputLanguage" class="col-xs-3 control-label">Language</label>
+                <div class="col-xs-9">
+                  <select class="form-control" id="inputLanguage">
+                    <option>English</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" style="margin-left: 0px" id="rt-confirm">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/assets/js/jquery-1.11.1.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/js/app.js"></script>
+  </body>
+</html>
